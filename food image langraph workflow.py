@@ -1,270 +1,207 @@
 import streamlit as st
 from langgraph.graph import StateGraph, START, END
 from typing import TypedDict, Literal, Optional, List, Dict, Any
+import io
 
 # ---------- State ----------
-class FoodImageProcessingState(TypedDict, total=False):
+class NutritionState(TypedDict, total=False):
     # Input data
-    user_image_unit: Optional[str]
-    user_input: Optional[str]
-    
-    # Validation states
-    input_valid: bool
-    image_valid: bool
+    user_image: Optional[str]
+    user_profile: Dict[str, Any]  # age, gender, demography, profession, daily_routine
+    medical_report: Optional[str]
     
     # Processing data
-    image_processing_response: Dict[str, Any]
-    medical_llm_response: Dict[str, Any]
+    vision_analysis: Dict[str, Any]
+    food_identification: Optional[str]
+    nutrition_data: Dict[str, Any]
+    medical_analysis: Dict[str, Any]
+    drug_analysis: List[str]
+    health_metrics: Dict[str, Any]
     
-    # Medical data
-    medical_report_found: bool
-    medical_data_available: bool
+    # Validation and safety
+    conflicts_detected: List[str]
+    risk_assessment: Dict[str, Any]
+    safety_status: Literal["safe", "not_safe"]
     
-    # Final outputs
-    validated_response: Dict[str, Any]
-    personalized_report: Dict[str, Any]
+    # Recommendations and analysis
+    personalized_recommendations: List[str]
+    statistical_analysis: Dict[str, Any]
+    
+    # Output
+    final_report: Dict[str, Any]
+    quality_score: float
     output: Dict[str, Any]
     
-    # Quality metrics
-    quality_passed: bool
+    # Control flags
+    has_clear_image: bool
 
-# ---------- Node Functions ----------
-def start_node(state: FoodImageProcessingState) -> FoodImageProcessingState:
-    """Initialize the workflow"""
+# ---------- Node Placeholders ----------
+def user_image_capture_node(state: NutritionState) -> NutritionState:
     return state
 
-def user_image_unit_node(state: FoodImageProcessingState) -> FoodImageProcessingState:
-    """Process user image input"""
-    # Add your image processing logic here
-    print("Processing user image unit...")
+def vision_node(state: NutritionState) -> NutritionState:
     return state
 
-def validate_input_node(state: FoodImageProcessingState) -> FoodImageProcessingState:
-    """Validate user input"""
-    # Add validation logic here
-    print("Validating input...")
-    # For demo purposes, assume validation passes
-    state["input_valid"] = True
+def general_food_name_node(state: NutritionState) -> NutritionState:
     return state
 
-def image_processing_node(state: FoodImageProcessingState) -> FoodImageProcessingState:
-    """Process the food image using LLM"""
-    print("Processing image with LLM...")
-    state["image_processing_response"] = {"status": "processed", "food_items": []}
+def image_identification_node(state: NutritionState) -> NutritionState:
     return state
 
-def medical_section_node(state: FoodImageProcessingState) -> FoodImageProcessingState:
-    """Process medical information"""
-    print("Processing medical section...")
-    state["medical_llm_response"] = {"status": "analyzed"}
+def nutrition_analysis_node(state: NutritionState) -> NutritionState:
     return state
 
-def personalized_report_generation_node(state: FoodImageProcessingState) -> FoodImageProcessingState:
-    """Generate personalized nutrition report"""
-    print("Generating personalized report...")
-    state["personalized_report"] = {
-        "recommendations": [],
-        "nutritional_analysis": {},
-        "health_insights": []
-    }
+def medical_report_processing_node(state: NutritionState) -> NutritionState:
     return state
 
-def validated_response_node(state: FoodImageProcessingState) -> FoodImageProcessingState:
-    """Generate validated response when no medical data"""
-    print("Generating validated response...")
-    state["validated_response"] = {"status": "validated", "recommendations": []}
+def medical_report_parsing_node(state: NutritionState) -> NutritionState:
     return state
 
-def quality_assurance_node(state: FoodImageProcessingState) -> FoodImageProcessingState:
-    """Perform quality assurance checks"""
-    print("Performing quality assurance...")
-    # Add QA logic here
-    state["quality_passed"] = True
+def drug_analysis_node(state: NutritionState) -> NutritionState:
     return state
 
-def output_node(state: FoodImageProcessingState) -> FoodImageProcessingState:
-    """Generate final output"""
-    print("Generating final output...")
-    state["output"] = {
-        "final_report": state.get("personalized_report", state.get("validated_response", {})),
-        "quality_score": 0.95 if state.get("quality_passed", False) else 0.6
-    }
+def health_metrics_analysis_node(state: NutritionState) -> NutritionState:
     return state
 
-def end_node(state: FoodImageProcessingState) -> FoodImageProcessingState:
-    """End the workflow"""
-    print("Workflow completed!")
+def cross_validation_conflict_resolution_node(state: NutritionState) -> NutritionState:
     return state
 
-# ---------- Router Functions ----------
-def route_after_validation(state: FoodImageProcessingState) -> str:
-    """Route based on input validation"""
-    if state.get("input_valid", False):
-        return "valid_path"
+def risk_assessment_node(state: NutritionState) -> NutritionState:
+    return state
+
+def personalized_recommendation_node(state: NutritionState) -> NutritionState:
+    return state
+
+def statistical_analysis_node(state: NutritionState) -> NutritionState:
+    return state
+
+def report_generation_node(state: NutritionState) -> NutritionState:
+    return state
+
+def quality_assurance_node(state: NutritionState) -> NutritionState:
+    return state
+
+def end_unsafe_consumption(state: NutritionState) -> NutritionState:
+    return state
+
+# ---------- Routers ----------
+def route_after_vision(state: NutritionState) -> str:
+    """Route based on image clarity"""
+    if state.get("has_clear_image", False):
+        return "image_identification"
     else:
-        return "invalid_input"
+        return "general_food_name"
 
-def route_after_image_processing(state: FoodImageProcessingState) -> str:
-    """Route to medical section after image processing"""
-    return "medical_section"
-
-def route_medical_report_check(state: FoodImageProcessingState) -> str:
-    """Route based on medical report availability"""
-    # Simulate medical report check
-    medical_report_found = state.get("medical_llm_response", {}).get("medical_data_available", False)
-    
-    if medical_report_found:
-        return "medical_report_found"
+def route_after_risk_assessment(state: NutritionState) -> str:
+    """Route based on safety status"""
+    safety_status = state.get("safety_status")
+    if safety_status == "not_safe":
+        return "end_unsafe"
     else:
-        return "no_medical_data"
+        return "personalized_recommendations"
 
-def route_quality_check(state: FoodImageProcessingState) -> str:
-    """Route based on quality assurance results"""
-    if state.get("quality_passed", False):
-        return "quality_passed"
-    else:
-        return "quality_failed"
-
-# ---------- Build Food Image Processing Workflow ----------
-def build_food_processing_workflow():
-    graph = StateGraph(FoodImageProcessingState)
+# ---------- Build Nutrition Workflow ----------
+def build_nutrition_workflow():
+    graph = StateGraph(NutritionState)
 
     # Add all nodes
-    graph.add_node("start", start_node)
-    graph.add_node("user_image_unit", user_image_unit_node)
-    graph.add_node("validate_input", validate_input_node)
-    graph.add_node("image_processing", image_processing_node)
-    graph.add_node("medical_section", medical_section_node)
-    graph.add_node("personalized_report_generation", personalized_report_generation_node)
-    graph.add_node("validated_response", validated_response_node)
+    graph.add_node("user_image_capture", user_image_capture_node)
+    graph.add_node("vision_analysis", vision_node)
+    graph.add_node("general_food_name", general_food_name_node)
+    graph.add_node("image_identification", image_identification_node)
+    graph.add_node("nutrition_analysis", nutrition_analysis_node)
+    graph.add_node("medical_report_processing", medical_report_processing_node)
+    graph.add_node("medical_report_parsing", medical_report_parsing_node)
+    graph.add_node("drug_analysis", drug_analysis_node)
+    graph.add_node("health_metrics_analysis", health_metrics_analysis_node)
+    graph.add_node("cross_validation_conflict_resolution", cross_validation_conflict_resolution_node)
+    graph.add_node("risk_assessment", risk_assessment_node)
+    graph.add_node("personalized_recommendations", personalized_recommendation_node)
+    graph.add_node("statistical_analysis", statistical_analysis_node)
+    graph.add_node("report_generation", report_generation_node)
     graph.add_node("quality_assurance", quality_assurance_node)
-    graph.add_node("output", output_node)
-    graph.add_node("end", end_node)
+    graph.add_node("end_unsafe", end_unsafe_consumption)
 
-    # Define the workflow flow
-    graph.add_edge(START, "start")
-    graph.add_edge("start", "user_image_unit")
-    graph.add_edge("user_image_unit", "validate_input")
+    # Sequential flow from start
+    graph.add_edge(START, "user_image_capture")
+    graph.add_edge("user_image_capture", "vision_analysis")
 
-    # Conditional routing after validation
+    # Conditional routing after vision analysis
     graph.add_conditional_edges(
-        "validate_input",
-        route_after_validation,
+        "vision_analysis",
+        route_after_vision,
         {
-            "valid_path": "image_processing",
-            "invalid_input": "end"  # End if invalid input
+            "image_identification": "image_identification",
+            "general_food_name": "general_food_name"
         }
     )
 
-    # Route to medical section after image processing
-    graph.add_edge("image_processing", "medical_section")
+    # Both paths converge to nutrition analysis
+    graph.add_edge("image_identification", "nutrition_analysis")
+    graph.add_edge("general_food_name", "nutrition_analysis")
 
-    # Conditional routing based on medical report availability
+    # Parallel medical processing after nutrition analysis
+    graph.add_edge("nutrition_analysis", "medical_report_processing")
+    graph.add_edge("medical_report_processing", "medical_report_parsing")
+    graph.add_edge("medical_report_parsing", "drug_analysis")
+    graph.add_edge("drug_analysis", "health_metrics_analysis")
+
+    # Cross validation and risk assessment
+    graph.add_edge("health_metrics_analysis", "cross_validation_conflict_resolution")
+    graph.add_edge("cross_validation_conflict_resolution", "risk_assessment")
+
+    # Conditional routing after risk assessment
     graph.add_conditional_edges(
-        "medical_section",
-        route_medical_report_check,
+        "risk_assessment",
+        route_after_risk_assessment,
         {
-            "medical_report_found": "personalized_report_generation",
-            "no_medical_data": "validated_response"
+            "end_unsafe": "end_unsafe",
+            "personalized_recommendations": "personalized_recommendations"
         }
     )
 
-    # Both paths lead to quality assurance
-    graph.add_edge("personalized_report_generation", "quality_assurance")
-    graph.add_edge("validated_response", "quality_assurance")
+    # Safe path continues through recommendations and analysis
+    graph.add_edge("personalized_recommendations", "statistical_analysis")
+    graph.add_edge("statistical_analysis", "report_generation")
+    graph.add_edge("report_generation", "quality_assurance")
 
-    # Quality assurance to output
-    graph.add_edge("quality_assurance", "output")
-    graph.add_edge("output", "end")
-    graph.add_edge("end", END)
+    # End points
+    graph.add_edge("quality_assurance", END)
+    graph.add_edge("end_unsafe", END)
 
     return graph.compile()
 
 # ---------- Streamlit App ----------
 def main():
-    st.title("🍽️ Food Image Processing LangGraph")
-    st.write("AI-powered food analysis and personalized nutrition recommendations")
+    st.title("🍽️ Nutrition Analysis Workflow")
+    st.write("Food Image Processing with LangGraph")
     
-    # Input section
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        st.subheader("Upload Food Image")
-        uploaded_file = st.file_uploader("Choose an image...", type=['jpg', 'jpeg', 'png'])
-        
-    with col2:
-        st.subheader("User Information")
-        user_input = st.text_area("Additional information (optional)", 
-                                 placeholder="Any dietary restrictions, allergies, or preferences...")
-
-    # Process button
-    if st.button("🔍 Analyze Food Image", type="primary"):
-        if uploaded_file is not None:
-            try:
-                with st.spinner("Processing your food image..."):
-                    # Build and run workflow
-                    workflow = build_food_processing_workflow()
-                    
-                    # Initial state
-                    initial_state = {
-                        "user_image_unit": uploaded_file.name,
-                        "user_input": user_input
-                    }
-                    
-                    # Run the workflow
-                    result = workflow.invoke(initial_state)
-                    
-                    # Display results
-                    st.success("✅ Analysis Complete!")
-                    
-                    col1, col2 = st.columns(2)
-                    
-                    with col1:
-                        st.subheader("📊 Analysis Results")
-                        if result.get("output"):
-                            st.json(result["output"])
-                    
-                    with col2:
-                        st.subheader("🎯 Quality Score")
-                        quality_score = result.get("output", {}).get("quality_score", 0)
-                        st.metric("Quality", f"{quality_score:.1%}")
-                        
-                        if quality_score > 0.8:
-                            st.success("High quality analysis!")
-                        elif quality_score > 0.6:
-                            st.warning("Moderate quality analysis")
-                        else:
-                            st.error("Low quality analysis - consider uploading a clearer image")
-                    
-            except Exception as e:
-                st.error(f"Error processing image: {str(e)}")
-        else:
-            st.warning("Please upload an image first!")
-
-    # Workflow diagram section
-    st.markdown("---")
-    if st.button("📊 Generate Workflow Diagram"):
+    # Build workflow
+    if st.button("Generate Workflow Diagram"):
         try:
-            with st.spinner("Generating workflow diagram..."):
-                workflow = build_food_processing_workflow()
+            with st.spinner("Building nutrition workflow..."):
+                nutrition_workflow = build_nutrition_workflow()
                 
                 # Generate flowchart
-                mermaid_png = workflow.get_graph().draw_mermaid_png()
+                mermaid_png = nutrition_workflow.get_graph().draw_mermaid_png()
                 
-                # Display the image
-                st.image(mermaid_png, caption="Food Processing Workflow", use_column_width=True)
+                # Display the image in Streamlit
+                st.image(mermaid_png, caption="Nutrition Workflow Diagram", use_column_width=True)
                 
-                # Download button
+                # Provide download button
                 st.download_button(
-                    label="📥 Download Workflow Diagram",
+                    label="Download Workflow Diagram",
                     data=mermaid_png,
-                    file_name="food_processing_workflow.png",
+                    file_name="nutrition_workflow.png",
                     mime="image/png"
                 )
                 
+                st.success("Workflow diagram generated successfully!")
+                
         except Exception as e:
-            st.error(f"Error generating diagram: {str(e)}")
-            st.info("Install required packages: `pip install langgraph streamlit`")
+            st.error(f"Error generating workflow: {str(e)}")
+            st.info("Make sure you have installed all required packages:")
+            st.code("pip install langgraph streamlit")
 
 if __name__ == "__main__":
     main()
